@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Creator {
+  id           String   @id @default(cuid())
+  loginId      String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Question {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  explanation String
+  isPublished Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  choices     Choice[]
+  answers     Answer[]
+}
+
+model Choice {
+  id         String   @id @default(cuid())
+  questionId String
+  label      String
+  value      String
+  isCorrect  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+model Examinee {
+  id           String   @id @default(cuid())
+  department   String
+  employeeCode String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  answers      Answer[]
+
+  @@unique([employeeCode, name])
+}
+
+model Answer {
+  id             String    @id @default(cuid())
+  examineeId     String
+  questionId     String
+  selectedChoice String
+  isCorrect      Boolean
+  answeredAt     DateTime  @default(now())
+  examinee       Examinee  @relation(fields: [examineeId], references: [id], onDelete: Cascade)
+  question       Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([examineeId])
+  @@index([questionId])
+  @@unique([examineeId, questionId])
+}
